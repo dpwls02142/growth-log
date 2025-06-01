@@ -12,6 +12,11 @@
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "docs:preview": "vitepress preview",
+    "obsidian-sync": "node scripts/obsidian-sync.cjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "gray-matter": "^4.0.3"
   }
 }

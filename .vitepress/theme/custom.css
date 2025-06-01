@@ -5,6 +5,20 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'RIDIBatang';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SUIT';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Black.woff2') format('woff2');
+    font-weight: 900;
+    font-style: normal;
+}
+
 /* 기본 폰트 설정 */
 :root {
     --vp-font-family-base: 'RIDIBatang', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -18,7 +32,7 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: 'RIDIBatang', sans-serif;
+    font-family: 'SUIT-Regular', sans-serif;
     font-weight: bold;
 }
 
@@ -27,7 +41,12 @@ p,
 li,
 a {
     font-family: 'RIDIBatang', sans-serif;
+}
+
+strong {
+    font-family: 'RIDIBatang';
     font-weight: normal;
+    text-shadow: 0 0 0.6px black;
 }
 
 /* 코드 블록 폰트 설정 */

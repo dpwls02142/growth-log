@@ -7,7 +7,6 @@ const sidebar = (() => {
     const blogDir = join(process.cwd(), 'blog')
     if (!existsSync(blogDir)) return {}
 
-    // 기존 generateSidebar 로직
     const categories = readdirSync(blogDir, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name)

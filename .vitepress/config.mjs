@@ -85,22 +85,15 @@ export default defineConfig({
     }
   },
   head: [
-    ['link', { rel: 'stylesheet', href: '/theme/custom.css' }],
-
-    // 파비콘 설정
-    ['link', { rel: 'icon', type: 'image/x-icon', href: '/public/favicon.ico' }],
-
-    // 오픈그래프 설정
+    ['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Growth Log' }],
     ['meta', { property: 'og:description', content: 'dpwls의 성장 일지' }],
-    ['meta', { property: 'og:image', content: '/public/og-image.jpg' }],
+    ['meta', { property: 'og:image', content: '/images/og-image.jpg' }],
     ['meta', { property: 'og:url', content: 'https://growth-log-kappa.vercel.app/' }],
-
-    // 트위터 카드 설정
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:title', content: 'Growth Log' }],
     ['meta', { name: 'twitter:description', content: 'dpwls의 성장 일지' }],
-    ['meta', { name: 'twitter:image', content: '/public/og-image.jpg' }],
+    ['meta', { name: 'twitter:image', content: '/images/og-image.jpg' }],
   ]
 }) 

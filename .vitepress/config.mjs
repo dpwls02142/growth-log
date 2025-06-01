@@ -86,6 +86,7 @@ export default defineConfig({
   },
   head: [
     ['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    ['link', { rel: 'apple-touch-icon', href: '/favicon.ico' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Growth Log' }],
     ['meta', { property: 'og:description', content: 'dpwls의 성장 일지' }],

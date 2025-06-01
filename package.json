@@ -1,0 +1,17 @@
+{
+  "name": "growht-log",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "repository": "https://github.com/dpwls02142/growth-log.git",
+  "author": "dpwls <dpwls02142@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  }
+}

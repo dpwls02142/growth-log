@@ -38,6 +38,7 @@ function generateSidebar() {
 
 export default defineConfig({
   base: '/',
+  cleanUrls: true,
   title: "Growth Log",
   description: "개발자의 성장 일지",
   themeConfig: {

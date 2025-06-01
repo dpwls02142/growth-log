@@ -1,40 +1,50 @@
 import { defineConfig } from 'vitepress'
-import { readdirSync } from 'fs'
+import { readdirSync, existsSync } from 'fs'
 import { join } from 'path'
 
-function generateSidebar() {
-  const blogDir = join(process.cwd(), 'blog')
-  const categories = readdirSync(blogDir, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name)
+const sidebar = (() => {
+  try {
+    const blogDir = join(process.cwd(), 'blog')
+    if (!existsSync(blogDir)) return {}
 
-  const sidebarItems = categories.map(category => {
-    const categoryDir = join(blogDir, category)
-    const posts = readdirSync(categoryDir)
-      .filter(file => file.endsWith('.md') && file !== 'index.md')
-      .map(file => ({
-        text: file.replace('.md', '').split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-        link: `/blog/${category}/${file.replace('.md', '')}`
-      }))
+    // 기존 generateSidebar 로직
+    const categories = readdirSync(blogDir, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name)
 
-    return {
-      text: category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-      collapsed: false,
-      items: posts
+    const sidebarItems = categories.map(category => {
+      const categoryDir = join(blogDir, category)
+      const posts = readdirSync(categoryDir)
+        .filter(file => file.endsWith('.md') && file !== 'index.md')
+        .map(file => ({
+          text: file.replace('.md', '').split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+          link: `/blog/${category}/${file.replace('.md', '')}`
+        }))
+
+      return {
+        text: category.split('-').map(word =>
+          word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        collapsed: false,
+        items: posts
+      }
+    })
+
+    const result = {
+      '/': sidebarItems,
+      '/blog/': sidebarItems
     }
-  })
 
-  const sidebar = {
-    '/': sidebarItems,
-    '/blog/': sidebarItems
+    categories.forEach(category => {
+      result[`/blog/${category}/`] = sidebarItems
+    })
+
+    return result
+  } catch (error) {
+    console.warn('사이드바 생성 실패:', error)
+    return {}
   }
-
-  categories.forEach(category => {
-    sidebar[`/blog/${category}/`] = sidebarItems
-  })
-
-  return sidebar
-}
+})()
 
 export default defineConfig({
   base: '/',
@@ -50,7 +60,7 @@ export default defineConfig({
       { text: '홈', link: '/' },
       { text: '기술 블로그', link: 'https://dpwls02142.github.io/' },
     ],
-    sidebar: generateSidebar(),
+    sidebar: sidebar,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/dpwls02142/' }
     ],

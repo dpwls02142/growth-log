@@ -23,7 +23,31 @@
 :root {
     --vp-font-family-base: 'RIDIBatang', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     --vp-font-family-mono: 'RIDIBatang', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+    /* 브랜드 색상 (버튼, 제목 컬러) */
+    --vp-c-brand-1: #ff8ed4;
+    --vp-c-brand-2: rgb(255, 125, 207);
+    --vp-c-brand-3: #ff8ed4;
+
+    /* 링크 색상 */
+    --vp-c-link: var(--vp-c-brand-1);
+    --vp-c-link-hover: var(--vp-c-brand-2);
+
 }
+
+/* 취소선 스타일 */
+s {
+    color: #a8aeb2;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+/* 형광펜 스타일 */
+mark {
+    background-color: #ffd5f2;
+    padding: 0.1em 0.2em;
+}
+
 
 /* 제목 폰트 설정 */
 h1,

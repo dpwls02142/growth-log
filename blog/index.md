@@ -12,4 +12,4 @@ title: 소개글
 
 그럼..
 
-![image](../public/images/index.jpg)
+![image](/images/index.jpg)

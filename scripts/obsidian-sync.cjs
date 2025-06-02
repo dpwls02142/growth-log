@@ -7,36 +7,107 @@ require('dotenv').config();
 // 옵시디언 볼트 경로 설정
 const OBSIDIAN_VAULT_PATH = process.env.OBSIDIAN_VAULT_PATH;
 const BLOG_PATH = path.join(__dirname, '..', 'blog');
+const PUBLIC_PATH = path.join(__dirname, '..', 'public');
 
 console.log('🚀 옵시디언과 vitepress 블로그를 연동합니다');
 
 // 경로 확인
 if (!OBSIDIAN_VAULT_PATH || !fs.existsSync(OBSIDIAN_VAULT_PATH)) {
+    console.error('❌ 옵시디언 볼트 경로가 올바르지 않습니다');
     process.exit(1);
 }
 
-function getCategoryFromPath(filePath) {
+function getCategoryStructure(filePath) {
     // 옵시디언 볼트 경로를 제외한 상대 경로 구하기
     const relativePath = path.relative(OBSIDIAN_VAULT_PATH, filePath);
-    // 첫 번째 폴더를 카테고리로 사용
-    const firstFolder = relativePath.split(path.sep)[0];
-    return firstFolder || 'uncategorized';
+    console.log(`🔍 상대 경로: ${relativePath}`);
+
+    // 폴더 구조를 옵시디언과 동일하게 그대로 유지
+    const folders = path.dirname(relativePath).split(path.sep).filter(folder => folder !== '.');
+    console.log(`📁 폴더 배열: ${JSON.stringify(folders)}`);
+
+    return {
+        categoryPath: folders.join(path.sep), // 실제 폴더 구조용
+        categoryId: folders.join('-'), // URL/ID용
+        folders: folders
+    };
+}
+
+// 이미지 파일을 public 폴더로 복사
+function copyImageToPublic(imagePath, categoryPath) {
+    try {
+        const fileName = path.basename(imagePath);
+        const publicImageDir = path.join(PUBLIC_PATH, 'images', categoryPath);
+
+        if (!fs.existsSync(publicImageDir)) {
+            fs.mkdirSync(publicImageDir, { recursive: true });
+        }
+
+        const targetPath = path.join(publicImageDir, fileName);
+
+        // 이미지 파일 복사
+        if (fs.existsSync(imagePath)) {
+            fs.copyFileSync(imagePath, targetPath);
+            console.log(`📷 이미지 복사 완료: ${fileName} -> /images/${categoryPath}/${fileName}`);
+            return `/images/${categoryPath.replace(/\\/g, '/')}/${fileName}`; // Windows 경로 처리
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`❌ 이미지 복사 오류 ${imagePath}:`, error.message);
+        return null;
+    }
 }
 
 // 옵시디언 문법을 VitePress 호환 문법으로 변환
-function convertObsidianToVitePress(content) {
+function convertObsidianToVitePress(content, filePath, categoryPath) {
     let convertedContent = content;
 
     // 1. 형광펜 ==텍스트== -> <mark>텍스트</mark>
     convertedContent = convertedContent.replace(/==(.*?)==/g, '<mark>$1</mark>');
 
-    // 2. 줄바꿈 처리 개선 - 옵시디언은 단일 줄바꿈도 처리하는데 일반 마크다운은 2개 필요
-    // 단락 구분을 명확히 하기 위해 빈 줄이 없는 줄바꿈에 <br> 추가
+    // 2. 줄바꿈 처리 개선
     convertedContent = convertedContent.replace(/([^\n])\n([^\n])/g, '$1  \n$2');
 
     // 3. 옵시디언 링크 [[링크]] -> [링크](링크.md)
     convertedContent = convertedContent.replace(/\[\[(.*?)\]\]/g, '[$1]($1.md)');
 
+    // 4. 이미지 처리
+    const imageRegex = /!\[\[(.*?)\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+
+    convertedContent = convertedContent.replace(imageRegex, (match, obsidianImage, altText, mdImagePath) => {
+        let imagePath, alt;
+
+        if (obsidianImage) {
+            imagePath = obsidianImage;
+            alt = path.parse(obsidianImage).name;
+        } else {
+            imagePath = mdImagePath;
+            alt = altText || path.parse(mdImagePath).name;
+        }
+
+        let fullImagePath;
+        if (path.isAbsolute(imagePath)) {
+            fullImagePath = imagePath;
+        } else {
+            const currentDir = path.dirname(filePath);
+            fullImagePath = path.join(currentDir, imagePath);
+
+            if (!fs.existsSync(fullImagePath)) {
+                fullImagePath = path.join(OBSIDIAN_VAULT_PATH, imagePath);
+            }
+        }
+
+        // 이미지를 public 폴더로 복사
+        const publicImagePath = copyImageToPublic(fullImagePath, categoryPath);
+
+        if (publicImagePath) {
+            return `![${alt}](${publicImagePath})`;
+        } else {
+            console.warn(`⚠️이미지를 찾을 수 없습니다: ${imagePath}`);
+            return match;
+        }
+    });
 
     return convertedContent;
 }
@@ -46,21 +117,30 @@ function processMarkdownFile(filePath) {
         const content = fs.readFileSync(filePath, { encoding: 'utf8' });
         const { data, content: markdownContent } = matter(content);
 
-        const convertedContent = convertObsidianToVitePress(markdownContent);
+        // 카테고리 구조 정보 가져오기
+        const categoryInfo = getCategoryStructure(filePath);
+        const targetDir = path.join(BLOG_PATH, categoryInfo.categoryPath); // blog/til/2025年/6月
 
-        // 카테고리 결정 (파일 경로의 첫 번째 폴더 사용)
-        const category = getCategoryFromPath(filePath);
-        const categoryPath = path.join(BLOG_PATH, category);
+        console.log(`📂 타겟 디렉토리: ${targetDir}`);
+
+        // 중첩된 폴더 구조 생성
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+            console.log(`📁 폴더 생성: ${targetDir}`);
+        }
+
+        const convertedContent = convertObsidianToVitePress(markdownContent, filePath, categoryInfo.categoryPath);
 
         // 파일명 생성
         const fileName = path.basename(filePath);
-        const targetPath = path.join(categoryPath, fileName);
+        const targetPath = path.join(targetDir, fileName);
 
         // 메타데이터 추가
         const frontMatter = {
-            title: data.title || path.parse(fileName).name, // 타이틀은 파일명과 동일하게
-            date: data.date || new Date().toISOString().split('T')[0], // 날짜는 파일 생성 날짜
-            category: category,
+            title: data.title || path.parse(fileName).name,
+            date: data.date || new Date().toISOString().split('T')[0],
+            category: categoryInfo.categoryId, // til-2025年-6月
+            categoryPath: categoryInfo.categoryPath, // til/2025年/6月
             ...data
         };
 
@@ -68,7 +148,7 @@ function processMarkdownFile(filePath) {
         const newContent = matter.stringify(convertedContent, frontMatter);
         fs.writeFileSync(targetPath, newContent, { encoding: 'utf8' });
 
-        console.log(`✅ 파일 생성 완료: ${fileName} -> ${category}/${fileName}`);
+        console.log(`✅ 파일 생성 완료: ${fileName} -> ${categoryInfo.categoryPath}/${fileName}`);
         return true;
     } catch (error) {
         console.error(`❌ 파일 생성 오류 ${filePath}:`, error.message);

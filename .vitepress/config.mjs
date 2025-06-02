@@ -2,43 +2,56 @@ import { defineConfig } from 'vitepress'
 import { readdirSync, existsSync } from 'fs'
 import { join } from 'path'
 
+function buildSidebarFromDirectory(dir, basePath = '/blog') {
+  const items = []
+
+  try {
+    const entries = readdirSync(dir, { withFileTypes: true })
+
+    // 폴더들 먼저 처리
+    const folders = entries.filter(entry => entry.isDirectory())
+    for (const folder of folders) {
+      const folderPath = join(dir, folder.name)
+      const urlPath = `${basePath}/${folder.name}`
+
+      const subItems = buildSidebarFromDirectory(folderPath, urlPath)
+
+      if (subItems.length > 0) {
+        items.push({
+          text: folder.name,
+          collapsed: false,
+          items: subItems
+        })
+      }
+    }
+
+    // 마크다운 파일들 처리
+    const mdFiles = entries
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'index.md')
+      .map(file => ({
+        text: file.name.replace('.md', ''),
+        link: `${basePath}/${file.name.replace('.md', '')}`
+      }))
+
+    items.push(...mdFiles)
+
+  } catch (error) {
+    console.warn(`폴더 읽기 실패 ${dir}:`, error)
+  }
+
+  return items
+}
+
 const sidebar = (() => {
   try {
     const blogDir = join(process.cwd(), 'blog')
     if (!existsSync(blogDir)) return {}
 
-    const categories = readdirSync(blogDir, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name)
+    const sidebarItems = buildSidebarFromDirectory(blogDir)
 
-    const sidebarItems = categories.map(category => {
-      const categoryDir = join(blogDir, category)
-      const posts = readdirSync(categoryDir)
-        .filter(file => file.endsWith('.md') && file !== 'index.md')
-        .map(file => ({
-          text: file.replace('.md', '').split('-').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-          link: `/blog/${category}/${file.replace('.md', '')}`
-        }))
-
-      return {
-        text: category.split('-').map(word =>
-          word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-        collapsed: false,
-        items: posts
-      }
-    })
-
-    const result = {
-      '/': sidebarItems,
+    return {
       '/blog/': sidebarItems
     }
-
-    categories.forEach(category => {
-      result[`/blog/${category}/`] = sidebarItems
-    })
-
-    return result
   } catch (error) {
     console.warn('사이드바 생성 실패:', error)
     return {}
@@ -82,6 +95,11 @@ export default defineConfig({
           }
         }
       }
+    },
+    // breadcrumb 추가
+    docFooter: {
+      prev: '이전 페이지',
+      next: '다음 페이지'
     }
   },
   head: [
@@ -97,4 +115,4 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: 'dpwls의 성장 일지' }],
     ['meta', { name: 'twitter:image', content: '/images/og-image.jpg' }],
   ]
-}) 
+})

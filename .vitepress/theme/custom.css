@@ -57,7 +57,25 @@ code {
 .thumbnail {
     position: fixed;
     bottom: 2rem;
-    right: 7rem;
+    right: 2rem;
     max-width: 250px;
     height: auto;
+}
+
+/* 태블릿 */
+@media (max-width: 768px) {
+    .thumbnail {
+        max-width: 200px;
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+
+/* 모바일 */
+@media (max-width: 480px) {
+    .thumbnail {
+        max-width: 150px;
+        bottom: 1rem;
+        right: 1rem;
+    }
 }

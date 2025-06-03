@@ -63,27 +63,21 @@ function copyImageToPublic(imagePath, categoryPath) {
 function convertObsidianToVitePress(content, filePath, categoryPath) {
     let convertedContent = content;
 
-    // 1. 형광펜 ==텍스트== -> <mark>텍스트</mark>
-    convertedContent = convertedContent.replace(/==(.*?)==/g, '<mark>$1</mark>');
-
-    // 2. 줄바꿈 처리 개선
-    convertedContent = convertedContent.replace(/([^\n])\n([^\n])/g, '$1  \n$2');
-
-    // 3. 옵시디언 링크 [[링크]] -> [링크](링크.md)
-    convertedContent = convertedContent.replace(/\[\[(.*?)\]\]/g, '[$1]($1.md)');
-
-    // 4. 이미지 처리
-    const imageRegex = /!\[\[(.*?)\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
-
-    convertedContent = convertedContent.replace(imageRegex, (match, obsidianImage, altText, mdImagePath) => {
-        let imagePath, alt;
+    // 1. 이미지 처리
+    const imageRegex = /!\[\[(.*?)(?:\s*\|\s*(\d+))?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+    convertedContent = convertedContent.replace(imageRegex, (
+        match, obsidianImage, obsidianWidth, mdAlt, mdPath, mdWidth
+    ) => {
+        let imagePath, alt, imgWidth;
 
         if (obsidianImage) {
-            imagePath = obsidianImage;
-            alt = path.parse(obsidianImage).name;
+            imagePath = obsidianImage.trim();
+            alt = path.parse(imagePath).name;
+            imgWidth = obsidianWidth ? `${obsidianWidth}` : null;
         } else {
-            imagePath = mdImagePath;
-            alt = altText || path.parse(mdImagePath).name;
+            imagePath = mdPath.trim();
+            alt = mdAlt || path.parse(imagePath).name;
+            imgWidth = mdWidth ? `${mdWidth}` : null;
         }
 
         let fullImagePath;
@@ -98,16 +92,29 @@ function convertObsidianToVitePress(content, filePath, categoryPath) {
             }
         }
 
-        // 이미지를 public 폴더로 복사
         const publicImagePath = copyImageToPublic(fullImagePath, categoryPath);
 
         if (publicImagePath) {
-            return `![${alt}](${publicImagePath})`;
+            if (imgWidth) {
+                return `<img src="${publicImagePath}" alt="${alt}" width="${imgWidth}">`;
+            } else {
+                return `![${alt}](${publicImagePath})`;
+            }
         } else {
             console.warn(`⚠️이미지를 찾을 수 없습니다: ${imagePath}`);
             return match;
         }
     });
+
+
+    // 2. 형광펜 ==텍스트== -> <mark>텍스트</mark>
+    convertedContent = convertedContent.replace(/==(.*?)==/g, '<mark>$1</mark>');
+
+    // 3. 줄바꿈 처리
+    convertedContent = convertedContent.replace(/([^\n])\n([^\n])/g, '$1  \n$2');
+
+    // 옵시디언 링크 [[링크]] -> [링크](링크.md)
+    convertedContent = convertedContent.replace(/\[\[(.*?)\]\]/g, '[$1]($1.md)');
 
     return convertedContent;
 }
@@ -138,7 +145,6 @@ function processMarkdownFile(filePath) {
         // 메타데이터 추가
         const frontMatter = {
             title: data.title || path.parse(fileName).name,
-            date: data.date || new Date().toISOString().split('T')[0],
             category: categoryInfo.categoryId, // til-2025年-6月
             categoryPath: categoryInfo.categoryPath, // til/2025年/6月
             ...data

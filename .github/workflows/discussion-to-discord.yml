@@ -1,12 +1,12 @@
 name: discussion 댓글 알림기
 on:
-  discussion:
+  discussion_comment:
     types: [created]
 
 jobs:
   notify:
+    if: github.event.discussion && github.event.comment
     runs-on: ubuntu-latest
-    steps:
       - name: Discord notification
         uses: Ilshidur/action-discord@master
         env:

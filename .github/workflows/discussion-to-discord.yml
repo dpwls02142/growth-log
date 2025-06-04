@@ -20,4 +20,4 @@ jobs:
             ### 🌠 블로그에 새 댓글이 달렸어요
             
             **댓글 작성자:** ${{ github.event.comment.user.login }}
-            **링크:** https://growth-log-kappa.vercel.app/${{ github.event.discussion.title }}
+            **링크:** <https://growth-log-kappa.vercel.app/${{ github.event.discussion.title }}>

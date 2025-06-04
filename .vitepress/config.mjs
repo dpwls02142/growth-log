@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import { readdirSync, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import matter from 'gray-matter'
+import { getIcon } from './icons'
 
 function buildSidebarFromDirectory(dir, basePath = '/blog') {
   const items = []
@@ -26,7 +27,7 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
 
       if (subItems.length > 0) {
         items.push({
-          text: folder.name,
+          text: `${getIcon(folder.name)} ${folder.name}`,
           collapsed: false,
           items: subItems
         })
@@ -61,7 +62,7 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
       })
       .sort((a, b) => a.date - b.date)
       .map(file => ({
-        text: file.name.replace('.md', ''),
+        text: `${getIcon('file')} ${file.name.replace('.md', '')}`,
         link: `${basePath}/${file.name.replace('.md', '')}`
       }))
 

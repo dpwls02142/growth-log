@@ -7,6 +7,7 @@ jobs:
   notify:
     if: github.event.discussion && github.event.comment
     runs-on: ubuntu-latest
+    steps:
       - name: Discord notification
         uses: Ilshidur/action-discord@master
         env:
@@ -15,4 +16,10 @@ jobs:
           DISCORD_AVATAR: "https://i.pinimg.com/736x/ec/d5/25/ecd525d23754007bfa12546d5127a4a5.jpg"
 
         with:
-          args: '🌠 새 댓글이 달렸어요: {{ EVENT_PAYLOAD.discussion.title }} by {{ EVENT_PAYLOAD.discussion.user.login }}'
+          args: |
+            새 댓글이 달렸어요
+            
+            **작성자:** ${{ github.event.comment.user.login }}
+            **페이지:** ${{ github.event.discussion.title }}
+            **댓글:** ${{ github.event.comment.body }}
+            **링크:** ${{ github.event.comment.html_url }}

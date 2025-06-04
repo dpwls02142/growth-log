@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
-import { readdirSync, existsSync, statSync } from 'fs'
+import { readdirSync, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import matter from 'gray-matter'
 
 function buildSidebarFromDirectory(dir, basePath = '/blog') {
   const items = []
@@ -8,19 +9,16 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
   try {
     const entries = readdirSync(dir, { withFileTypes: true })
 
-    // 폴더들 먼저 처리 (생성순 정렬)
+    // 폴더들 처리
     const folders = entries
       .filter(entry => entry.isDirectory())
       .map(folder => {
         const folderPath = join(dir, folder.name)
-        const stats = statSync(folderPath)
         return {
           name: folder.name,
-          path: folderPath,
-          birthtime: stats.birthtime
+          path: folderPath
         }
       })
-      .sort((a, b) => a.birthtime - b.birthtime) // 생성시간 오름차순 정렬
 
     for (const folder of folders) {
       const urlPath = `${basePath}/${folder.name}`
@@ -35,18 +33,33 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
       }
     }
 
-    // 마크다운 파일들 처리 (생성순 정렬)
+    // 마크다운 파일들 처리
     const mdFiles = entries
       .filter(entry => entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'index.md')
       .map(file => {
         const filePath = join(dir, file.name)
-        const stats = statSync(filePath)
+        let date = new Date(0)
+        
+        try {
+          const content = readFileSync(filePath, 'utf-8')
+          const parsed = matter(content)
+          
+          if (parsed.data && parsed.data.date) {
+            date = new Date(parsed.data.date)
+            console.log(`날짜: ${file.name} - ${parsed.data.date}`)
+          } else {
+            console.log(`날짜 없음: ${file.name}`)
+          }
+        } catch (error) {
+          console.warn(`frontmatter 읽기 실패: ${file.name}`, error.message)
+        }
+        
         return {
           name: file.name,
-          birthtime: stats.birthtime
+          date: date
         }
       })
-      .sort((a, b) => a.birthtime - b.birthtime) // 생성시간 오름차순 정렬
+      .sort((a, b) => a.date - b.date)
       .map(file => ({
         text: file.name.replace('.md', ''),
         link: `${basePath}/${file.name.replace('.md', '')}`
@@ -84,9 +97,7 @@ export default defineConfig({
   description: "dpwls의 성장 일지",
   themeConfig: {
     outline: {
-      level: 2,        // h2만 표시
-      level: [1, 4],   // h1부터 h4까지 표시
-      level: 'deep'    // 모든 레벨 표시 (1~6)
+      level: 'deep'
     },
     outlineTitle: '목차',
     nav: [

@@ -126,7 +126,7 @@ function processMarkdownFile(filePath) {
 
         // 카테고리 구조 정보 가져오기
         const categoryInfo = getCategoryStructure(filePath);
-        const targetDir = path.join(BLOG_PATH, categoryInfo.categoryPath); // blog/til/2025年/6月
+        const targetDir = path.join(BLOG_PATH, categoryInfo.categoryPath);
 
         console.log(`📂 타겟 디렉토리: ${targetDir}`);
 
@@ -142,22 +142,52 @@ function processMarkdownFile(filePath) {
         const fileName = path.basename(filePath);
         const targetPath = path.join(targetDir, fileName);
 
-        // 메타데이터 추가
+        // 기존 파일이 있는지 확인하고 기존 frontmatter 보존
+        let existingFrontMatter = {};
+        if (fs.existsSync(targetPath)) {
+            try {
+                const existingContent = fs.readFileSync(targetPath, { encoding: 'utf8' });
+                const existingMatter = matter(existingContent);
+                existingFrontMatter = existingMatter.data;
+                console.log(`🔄 기존 파일 발견, frontmatter 보존: ${fileName}`);
+            } catch (error) {
+                console.warn(`⚠️ 기존 파일 읽기 실패: ${fileName}`);
+            }
+        }
+
+        // 옵시디언 파일의 수정 시간을 기본 date로 사용
+        const fileStats = fs.statSync(filePath);
+        const defaultDate = fileStats.mtime.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+
+        // 메타데이터 병합 (기존 데이터 우선, 새로운 데이터로 보완)
         const frontMatter = {
-            title: data.title || path.parse(fileName).name,
-            category: categoryInfo.categoryId, // til-2025年-6月
-            categoryPath: categoryInfo.categoryPath, // til/2025年/6月
-            ...data
+            // 새로운 기본값들
+            title: path.parse(fileName).name,
+            category: categoryInfo.categoryId,
+            categoryPath: categoryInfo.categoryPath,
+            date: defaultDate, // 기본 날짜 설정
+            
+            // 옵시디언 파일의 frontmatter 적용
+            ...data,
+            
+            // 기존 파일의 frontmatter 우선 적용 (기존 date 보존)
+            ...existingFrontMatter,
+            
+            // 카테고리 정보는 항상 최신으로 업데이트
+            category: categoryInfo.categoryId,
+            categoryPath: categoryInfo.categoryPath,
         };
 
         // 새 파일 생성
         const newContent = matter.stringify(convertedContent, frontMatter);
         fs.writeFileSync(targetPath, newContent, { encoding: 'utf8' });
 
-        console.log(`✅ 파일 생성 완료: ${fileName} -> ${categoryInfo.categoryPath}/${fileName}`);
+        const isNewFile = !Object.keys(existingFrontMatter).length;
+        console.log(`✅ 파일 ${isNewFile ? '생성' : '업데이트'} 완료: ${fileName} -> ${categoryInfo.categoryPath}/${fileName}`);
+        
         return true;
     } catch (error) {
-        console.error(`❌ 파일 생성 오류 ${filePath}:`, error.message);
+        console.error(`❌ 파일 처리 오류 ${filePath}:`, error.message);
         return false;
     }
 }

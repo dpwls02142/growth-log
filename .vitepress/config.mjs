@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { readdirSync, existsSync } from 'fs'
+import { readdirSync, existsSync, statSync } from 'fs'
 import { join } from 'path'
 
 function buildSidebarFromDirectory(dir, basePath = '/blog') {
@@ -8,13 +8,23 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
   try {
     const entries = readdirSync(dir, { withFileTypes: true })
 
-    // 폴더들 먼저 처리
-    const folders = entries.filter(entry => entry.isDirectory())
-    for (const folder of folders) {
-      const folderPath = join(dir, folder.name)
-      const urlPath = `${basePath}/${folder.name}`
+    // 폴더들 먼저 처리 (생성순 정렬)
+    const folders = entries
+      .filter(entry => entry.isDirectory())
+      .map(folder => {
+        const folderPath = join(dir, folder.name)
+        const stats = statSync(folderPath)
+        return {
+          name: folder.name,
+          path: folderPath,
+          birthtime: stats.birthtime
+        }
+      })
+      .sort((a, b) => a.birthtime - b.birthtime) // 생성시간 오름차순 정렬
 
-      const subItems = buildSidebarFromDirectory(folderPath, urlPath)
+    for (const folder of folders) {
+      const urlPath = `${basePath}/${folder.name}`
+      const subItems = buildSidebarFromDirectory(folder.path, urlPath)
 
       if (subItems.length > 0) {
         items.push({
@@ -25,9 +35,18 @@ function buildSidebarFromDirectory(dir, basePath = '/blog') {
       }
     }
 
-    // 마크다운 파일들 처리
+    // 마크다운 파일들 처리 (생성순 정렬)
     const mdFiles = entries
       .filter(entry => entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'index.md')
+      .map(file => {
+        const filePath = join(dir, file.name)
+        const stats = statSync(filePath)
+        return {
+          name: file.name,
+          birthtime: stats.birthtime
+        }
+      })
+      .sort((a, b) => a.birthtime - b.birthtime) // 생성시간 오름차순 정렬
       .map(file => ({
         text: file.name.replace('.md', ''),
         link: `${basePath}/${file.name.replace('.md', '')}`
@@ -65,9 +84,11 @@ export default defineConfig({
   description: "dpwls의 성장 일지",
   themeConfig: {
     outline: {
-      level: [2, 3]
+      level: 2,        // h2만 표시
+      level: [1, 4],   // h1부터 h4까지 표시
+      level: 'deep'    // 모든 레벨 표시 (1~6)
     },
-    outlineTitle: '',
+    outlineTitle: '목차',
     nav: [
       { text: '홈', link: '/' },
       { text: '기술 블로그', link: 'https://dpwls02142.github.io/' },

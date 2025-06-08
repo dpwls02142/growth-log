@@ -8,11 +8,12 @@ date: '2025-06-08'
 저번 디렉토리 구조를 살펴볼 때도 봤지만   
 next.js는 pages 디렉토리 아래에 둔 하위 디렉토리를 알아서 url 경로로 지정해준다.  
 ## article  
-### 읽어보기  
 article은 ArticlePreview 컴포넌트를 눌렀을 때 이동되는 Article의 상세 페이지다.
 
 <img src="/images/projects/realworld/02. 코드 읽기/Pasted image 20250608125542.png" alt="Pasted image 20250608125542" width="400">  
-코드를 한 줄 한 줄 읽어보자.
+코드를 한 줄 한 줄 읽어보자.  
+
+### 읽어보기
 
 일단 ArticlePage라는 함수로 initialArticle이라는 Props를 받는다.  
 ```tsx  
@@ -105,116 +106,234 @@ ArticleBanner와 ArticleContent, TagList, CommentSection으로 하나하나 나�
 왜지 라고 생각해보는데 화살표함수를 사용해서 그런 것 같았다.   
 굳이 화살표 함수를 사용할 필요도 없을 뿐더러   
 나는 일반함수를 쓰는게 읽기가 더 좋아서 좋아하기 때문에 일반함수로 고쳐줬다.  
-### 최종 코드  
+### [최종 코드](https://github.com/dpwls02142/next-realworld-example-app/blob/main/pages/article/%5Bslug%5D.tsx)  
+## editor  
+editor는  
+1. 왼쪽 사진과 같이 새로운 글을 적을 때와  
+2. 오른쪽 사진과 같이 원래 있던 글을 수정할 때  
+나타나는 페이지다.  
+<table>  
+<tr>  
+	<td><img src="/images/projects/realworld/02. 코드 읽기/Pasted image 20250608202141.png" width="300"></td>  
+	<td><img src="/images/projects/realworld/02. 코드 읽기/Pasted image 20250608202222.png" width="300"></td>  
+</tr>  
+</table>  
+
+### 읽어보기  
+일단 두 페이지 코드 모두 전체적으로 주욱 봤을 때,  
+가장 먼저 눈에 띈 건 React를 사용하는 방식이었다.   
+기존에는 React 네임스페이스를 통해 직접 접근하는 방식을 사용하고 있었다.  
 ```tsx  
-import marked from 'marked';  
-import { useRouter } from 'next/router';  
 import React from 'react';  
-import useSWR from 'swr';
+const [isLoading, setLoading] = React.useState(false);  
+```  
+그래서 이를 named import 방식으로 변경했다.  
+```tsx  
+import { useState } from 'react';  
+const [isLoading, setLoading] = useState(false);  
+```  
+이렇게 바꾸면 코드가 더 간결해지는 건 물론이고,   
+번들 크기 최적화에도 도움이 된다.   
+모던 번들러들이 이미 최적화를 잘 해주긴 하지만,   
+필요한 함수만 import하는 것이 의미적으로도 더 명확하다.
 
-import ArticleMeta from '../../features/article/ArticleMeta';  
-import CommentList from '../../features/comment/CommentList';  
-import ArticleAPI from '../../lib/api/article';  
-import { Article } from '../../lib/types/articleType';  
-import { SERVER_BASE_URL } from '../../lib/utils/constant';  
-import fetcher from '../../lib/utils/fetcher';
+코드는 두 페이지에 비슷한 부분이 많기 때문에  
+번갈아가며 비교해보려한다.
 
-interface ArticleBannerProps {  
-  title: string;  
-  article: Article;  
+먼저 새 게시글을 작성할 때는 모든 필드를 빈 값으로 초기화한다.  
+```tsx  
+const PublishArticleEditor = () => {  
+  const initialState = {  
+    title: '',  
+    description: '',  
+    body: '',  
+    tagList: [],  
+  };  
+  // ...  
 }
-
-interface ArticleBodyProps {  
-  htmlContent: { __html: string };  
-  tags: string[];  
-}
-
-interface ArticlePageProps {  
-  initialArticle: { article: Article };  
-}
-
-function ArticleBanner({ title, article }: ArticleBannerProps) {  
-  return (  
-    <div className="banner">  
-      <div className="container">  
-        <h1>{title}</h1>  
-        <ArticleMeta article={article} />  
-      </div>  
-    </div>  
-  );  
-}
-
-function ArticleBody({ htmlContent, tags }: ArticleBodyProps) {  
-  return (  
-    <div className="row article-content">  
-      <div className="col-xs-12">  
-        <div dangerouslySetInnerHTML={htmlContent} />  
-        <ul className="tag-list">  
-          {tags.map((tag) => (  
-            <li key={tag} className="tag-default tag-pill tag-outline">  
-              {tag}  
-            </li>  
-          ))}  
-        </ul>  
-      </div>  
-    </div>  
-  );  
-}
-
-function CommentsSection() {  
-  return (  
-    <div className="row">  
-      <div className="col-xs-12 col-md-8 offset-md-2">  
-        <CommentList />  
-      </div>  
-    </div>  
-  );  
-}
-
-function ArticlePage({ initialArticle }: ArticlePageProps) {  
-  const router = useRouter();  
-  const { query: { slug }, } = router;
-
-  const { data: fetchedArticle } = useSWR(  
-    `${SERVER_BASE_URL}/articles/${encodeURIComponent(String(slug))}`,  
-    fetcher,  
-    { initialData: initialArticle },  
-  );
-
-  const articleData = fetchedArticle || initialArticle;  
-  const { article } = articleData;
-
-  const htmlContent = {  
-    __html: marked(article.body, { sanitize: true }),  
-  };
-
-  return (  
-    <div className="article-page">  
-      <ArticleBanner title={article.title} article={article} />
-
-      <div className="container page">  
-        <ArticleBody htmlContent={htmlContent} tags={article.tagList} />
-
-        <hr />  
-        <div className="article-actions" />
-
-        <CommentsSection />  
-      </div>  
-    </div>  
-  );  
-}
-
-ArticlePage.getInitialProps = async ({ query: { slug } }) => {  
-  const { data } = await ArticleAPI.get(slug);  
-  return data;  
-};
-
-export default ArticlePage;
-
 ```
 
-## editor
+ 반면 수정 페이지에서는   
+ 그 전에 작성했던 게시글의 정보를 갖고와야하기 때문에  
+ article에서 데이터를 갖고와서(get) 초기값으로 설정한다.  
+```tsx  
+const UpdateArticleEditor = ({ article: initialArticle }) => {  
+  const initialState = {  
+    title: initialArticle.title,  
+    description: initialArticle.description,  
+    body: initialArticle.body,  
+    tagList: initialArticle.tagList,  
+  };  
+  // ...  
+}
+```
+
+상태관리는 두 페이지 모두 동일한 패턴을 사용한다.  
+```tsx  
+  const [isLoading, setLoading] = useState(false);  
+  const [errors, setErrors] = useState([]);  
+  const [posting, dispatch] = useReducer(editorReducer, initialState);  
+  const { data: currentUser } = useSWR('user', storage);  
+```  
+여기서 흥미로운 점은 로딩과 에러 상태는 `useState`로,   
+게시글 관련 상태는 `useReducer`로 관리한다는 것이다.
+
+왜 이렇게 분리했을까?   
+만약 게시글 상태를 `useState`로 관리했다면 이렇게 됐을 것이다:  
+```tsx  
+const [title, setTitle] = useState('');  
+const [description, setDescription] = useState('');  
+const [body, setBody] = useState('');  
+const [tagList, setTagList] = useState([]);  
+```  
+하지만 `useReducer`를 사용하면 관련된 상태들을 하나의 객체로 묶어서 관리할 수 있고,   
+상태 변경 로직을 컴포넌트 외부로 분리할 수 있어서   
+테스트하기도 쉽고 재사용성도 높아진다.
+
+수정 페이지에서만 작성 페이지와 다르게  
+useRouter로 현재 페이지의 라우터 정보를 가져와서  
+url 파라미터를 관리한다.  
+```tsx  
+  const router = useRouter();  
+  const { query: { pid }, } = router;  
+```  
+근데 이 페이지에서 엔드포인트가 slug 형태로 나타나기 때문에 pid를 slug로 바꿔줬다.  
+`pid`도 parameter id라는 의미로 충분히 명확하지만,   
+`slug`가 게시글의 제목이나 내용과 연관된 의미있는 URL을 만들어준다는 점에서   
+더 적절하다고 생각했기에 변경했다.
+
+그리고 두 페이지 모두 title과 description, body, tag, submit의 상태를 관리한다.  
+각각의 핸들러 함수들이 어떻게 동작하는지 살펴보자.
+
+먼저 title, description, body 핸들러를 보면 다음과 같다.  
+```tsx  
+const handleTitle = (e) => dispatch({ type: 'SET_TITLE', text: e.target.value });  
+const handleDescription = (e) => dispatch({ type: 'SET_DESCRIPTION', text: e.target.value });  
+const handleBody = (e) => dispatch({ type: 'SET_BODY', text: e.target.value });  
+```  
+이 코드들은 dispatch를 통해 reducer에 action을 보내서 새로운 상태를 생성한다. dispatch란 어떤 작업이나 명령을 빠르게 보낸다는 의미를 가지고 있어서,   
+위 코드는 다음과 같은 과정을 거친다.  
+1. dispatch(...) 호출  
+2. editorReducer 호출  
+3. 새로운 상태 반환  
+4. posting 업데이트
+
+이 과정을 통해 사용자가 입력한 값이 실시간으로 상태에 반영된다
+
+하지만 위 코드에서 이벤트 객체 e에 타입을 지정해주지 않았기 때문에 경고가 발생한다.   
+그래서 각 입력 요소에 맞는 타입을 선언해서 사용했다.  
+```tsx  
+  type InputChange = ChangeEvent<HTMLInputElement>;  
+  type TextareaChange = ChangeEvent<HTMLTextAreaElement>;  
+  const handleTitle = (e: InputChange) =>  
+    dispatch({ type: 'SET_TITLE', text: e.target.value });  
+  const handleDescription = (e: InputChange) =>  
+    dispatch({ type: 'SET_DESCRIPTION', text: e.target.value });  
+  const handleBody = (e: TextareaChange) =>  
+    dispatch({ type: 'SET_BODY', text: e.target.value });  
+```
+
+태그 추가/삭제 함수들도 마찬가지로 타입이 없었기 때문에   
+string 타입을 명시해줬다.  
+```tsx  
+ const addTag = (tag: string) => dispatch({ type: 'ADD_TAG', tag: tag });  
+ const removeTag = (tag: string) => dispatch({ type: 'REMOVE_TAG', tag: tag });  
+```
+
+다음으로 handleSubmit은 article을 제출 할 때 동작하는 함수다.  
+이 함수도 이벤트 객체에 타입 정의가 되어있지 않았는데,   
+폼을 전송할 때 발생하는 이벤트이므로 FormEvent 타입을 명시해줬다.  
+```tsx  
+const handleSubmit = async (e: FormEvent) => {  
+    e.preventDefault();
+
+    const errorMessage = validateArticle(posting);
+
+    if (errorMessage) {  
+      alert(errorMessage);  
+      return;  
+    }
+
+    setLoading(true);
+
+    const { data, status } = await ArticleAPI.create(  
+      posting,  
+      currentUser?.token,  
+    );
+
+    setLoading(false);
+
+    if (status !== 200) {  
+      setErrors(data.errors);  
+    }
+
+    Router.push('/');  
+      
+  };  
+```  
+이 함수의 동작 과정은 다음과 같다  
+1. e.preventDefault()로 폼의 기본 제출 동작을 막고  
+2. validateArticle로 게시글 유효성을 검사한다  
+3. 유효하지 않으면 경고창을 띄우고 함수를 종료한다  
+4. 로딩 상태를 true로 설정하고  
+5. API를 호출해서 게시글을 생성/수정한 후  
+6. 로딩 상태를 false로 되돌린다  
+7. 마지막으로 응답 상태에 따라 에러를 설정하거나 홈페이지로 리다이렉트 한다
+
+new 페이지와 [slug] 페이지의 주요 차이점은 API 호출 부분에 있다.   
+새 게시글 작성 시에는 POST 요청을, 수정 시에는 PUT 요청을 사용한다.
+
+수정 페이지에서는 기존에 axios를 직접 사용하고 있었는데,   
+article API에 update 로직이 이미 정의되어 있어서 이를 활용하도록 변경했다.  
+```tsx  
+    const { data, status } = await ArticleAPI.update(  
+      { ...posting, slug },  
+      currentUser?.token,  
+    );  
+```  
+여기서 { ...posting, slug }는 기존 게시글 데이터에 slug 정보를 추가해서 전달하는 것이다.  
+이렇게 하면 서버에서 어떤 게시글을 수정해야 하는지 알 수 있다.  
+200번(정상 상태)가 아니면 error를 발생시키고
+
+마지막으로 응답 상태가 200번(정상 상태)이 아니면 에러를 발생시키고,   
+정상 상태라면 홈페이지로 리다이렉트된다.   
+이 과정을 통해 사용자는 게시글 작성/수정 완료 후   
+자연스럽게 메인 페이지로 이동하게 된다.
+
+### 분리하기  
+두 페이지는 공통되는 코드가 많다.  
+지금처럼 분리해서 사용하는게 좋을까,  
+아니면 하나로 통합해서 관리하는게 좋을까?
+
+저번에도 비슷한 고민을 했지만  
+해당 두 페이지에 공통적으로 들어가는 컴포넌트들은,  
+도메인이 동일하고 기능도 비슷한 면이 많기 때문에  
+추후 수정이 필요할 때도 두 군데를 같이 수정해줘야 한다.
+
+하지만 handleSubmit은 다르다. 공통되는 부분이 몇군데 있다고 하더라도,  
+앞서 말했지만 원래 있는 아티클을 수정할 때는 put을 하고  
+새로운 아티클을 생성할 때는 post를 해야한다.
+
+고로 렌더링 관련 컴포넌트들은  
+지난번에 만들었던 shared/ui 디렉토리에서 관리하고  
+EditorForm 컴포넌트를 만들어서 features에서 관리 후  
+pages에서 이를 불러오는 형태로 관리하는게 좋다고 생각했다.
+
+그래서 최종적으로 리팩토링한 코드는 아래와 같다.  
+- [shared/ui/input/TextArea.tsx](https://github.com/dpwls02142/next-realworld-example-app/blob/main/shared/ui/input/TextArea.tsx)  
+- [shared/ui/input/TextInput.tsx](https://github.com/dpwls02142/next-realworld-example-app/blob/main/shared/ui/input/TextInput.tsx)  
+- [shared/ui/button/SubmitButton.tsx](https://github.com/dpwls02142/next-realworld-example-app/blob/main/shared/ui/button/SubmitButton.tsx)  
+- [features/editor/EditorForm.tsx](https://github.com/dpwls02142/next-realworld-example-app/blob/main/features/editor/EditorForm.tsx)  
+### [최종 코드](https://github.com/dpwls02142/next-realworld-example-app/tree/main/pages/editor)
 
 ## profile
 
-## user
+### 읽어보기  
+### 분리하기  
+### 최종 코드
+
+
+## user  
+### 읽어보기  
+### 분리하기  
+### 최종 코드

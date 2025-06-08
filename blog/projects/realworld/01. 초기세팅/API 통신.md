@@ -1,14 +1,12 @@
 ---
 title: API 통신
-category: projects-realworld
-categoryPath: projects\realworld
+category: projects-realworld-01. 초기세팅
+categoryPath: projects\realworld\01. 초기세팅
 date: '2025-06-05'
 ---
-# API 통신
-
 오늘은 백엔드와 어케 통신하고 있는지~ 알아보겠슴다
 
-<img src="/images/projects/realworld/Pasted image 20250605193125.png" alt="Pasted image 20250605193125" width="400">
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605193125.png" alt="Pasted image 20250605193125" width="400">
 
 어제 디렉토리 구조를 봤던 것 처럼   
 유틸이나 api 통신 관련 코드는 모두 `lib` 디렉토리 안에 있다.  
@@ -144,7 +142,7 @@ export default validateArticle;
 Reducer로 받아온 posting 상태를  
 validateArticle로 검증했을 때  
 만약 뭔가가 있다면 이를 alert으로 출력하게 했다.  
-<img src="/images/projects/realworld/Pasted image 20250605150910.png" alt="Pasted image 20250605150910" width="400">  
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605150910.png" alt="Pasted image 20250605150910" width="400">  
 사진 속에선 변수명이 alertMessage로 되어있는데,  
 errorMessage로 고쳤다.
 
@@ -161,7 +159,7 @@ error까진 아닌가? 라는 생각이 잠깐 들었지만
 home에서   
 1. 내 feed(your feed) 탭을 눌렀을 때 아무런 포스팅이 뜨지 않고 그냥 undefined되고,  
 2. popular tags는 누를 때마다 콘솔 로그에 404가 찍혔다.  
-<img src="/images/projects/realworld/Pasted image 20250605192324.png" alt="Pasted image 20250605192324" width="200">
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605192324.png" alt="Pasted image 20250605192324" width="200">
 
 결국 백엔드 서버를 9년전거를 써서 (헉. 넘 오래됐나)  
 그 사이에 바뀐 명세가 많아 오류가 나는걸까 싶어  
@@ -198,7 +196,7 @@ home에서
 다시 보니까 백엔드에는 follow에 `"/profiles/{username}/follow"`형태로 되어 있다.
 
 근데 user로 값을 받아오는게 더 직관적인 것 같아서..   
-프론트에서 엔드포인트를 수정한쪽으로 사용하기로 했다 ㅎㅎ
+프론트에서 엔드포인트를 수정한쪽으로 사용 ㅎㅎ
 
 tags 문제는 `articles/api` 부분을 보면 아래와 같이 되어 있는데  
 ```python  
@@ -210,7 +208,7 @@ def list_tags(request) -> dict[str, Any]:
 `config/urls`의 원래 코드가   
 왼쪽 이미지 같이`/api/`라는 공통 경로에 계속 값을 덮어 쓰는 형태라 문제가 발생하는건가? 싶어   
 오른쪽과 같이 덮어쓰는게 아니라 병합하여 처리하는 방향으로 수정했다.  
-<img src="/images/projects/realworld/Pasted image 20250605190524.png" alt="Pasted image 20250605190524" width="700">  
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605190524.png" alt="Pasted image 20250605190524" width="700">  
 이러니까 해결 됐던데, 사실 백엔드 쪽은 잘 몰라서   
 ~~그렇다고 프런트를 잘 아는건 아님~~  
 확실히 이것때문에 해결된건지는 잘 모르겠다.
@@ -227,9 +225,9 @@ title에 한국어가 들어가면 unhandled error를 내뿜었다.
 >지금 내 블로그의 URL도 포스팅 할 때 사용한 한글 제목이 그대로 들어가 있는데, 이게 바로 slug다.
 
 그래서 `python-slugify` 라이브러리를 dockerfile에 설치 후  
-<img src="/images/projects/realworld/Pasted image 20250605182002.png" alt="Pasted image 20250605182002" width="400">  
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605182002.png" alt="Pasted image 20250605182002" width="400">  
 articles의 models에서 인코딩 처리를 해줬다.  
-<img src="/images/projects/realworld/Pasted image 20250605180615.png" alt="Pasted image 20250605180615" width="500">
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605180615.png" alt="Pasted image 20250605180615" width="500">
 
 그리고 front에서 slug가 들어가는 부분에 다 [encodeURIComponent](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) 함수를 감싸줬다.
 
@@ -238,7 +236,7 @@ encodeURI는 전체 URI을 인코딩하기 때문에
 일부 쿼리 부분(여기선 slug)만 인코딩 하기 위해 <mark>encodeURIComponent 함수를 사용</mark>했다.
 
 이러면 이제 한글 제목을 넣어도 에러를 안 내뿜는다.  
-<img src="/images/projects/realworld/Pasted image 20250605184126.png" alt="Pasted image 20250605184126" width="500">
+<img src="/images/projects/realworld/01. 초기세팅/Pasted image 20250605184126.png" alt="Pasted image 20250605184126" width="500">
 
 근데 하나하나 감싸며 들었던 생각이,  
 변수로 따로 빼서 상위에서 관리하는게 편할 것 같다는 생각이 들었다.

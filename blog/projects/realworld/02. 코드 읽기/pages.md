@@ -1,20 +1,17 @@
 ---
-title: article
-category: projects-realworld-pages
-categoryPath: projects\realworld\pages
+title: pages
+category: projects-realworld-02. 코드 읽기
+categoryPath: projects\realworld\02. 코드 읽기
 date: '2025-06-08'
 ---
-# pages/article  
+# pages  
 저번 디렉토리 구조를 살펴볼 때도 봤지만   
-next.js는 pages 디렉토리 아래에 둔 하위 디렉토리를 알아서 url 경로로 지정해준다.
-
-원래는 한꺼번에 포스팅하려 했으나,   
-글의 양이 길어질 것 같아 페이지별로 글을 나누기로 했다.
-
-## 읽어보기  
+next.js는 pages 디렉토리 아래에 둔 하위 디렉토리를 알아서 url 경로로 지정해준다.  
+## article  
+### 읽어보기  
 article은 ArticlePreview 컴포넌트를 눌렀을 때 이동되는 Article의 상세 페이지다.
 
-<img src="/images/projects/realworld/pages/Pasted image 20250608125542.png" alt="Pasted image 20250608125542" width="400">  
+<img src="/images/projects/realworld/02. 코드 읽기/Pasted image 20250608125542.png" alt="Pasted image 20250608125542" width="400">  
 코드를 한 줄 한 줄 읽어보자.
 
 일단 ArticlePage라는 함수로 initialArticle이라는 Props를 받는다.  
@@ -80,7 +77,7 @@ const { article }: Article = fetchedArticle || initialArticle;
 2. 클라이언트에서 페이지가 렌더링되면  
 3. useSWR이 fetchedArticle로 최신 데이터를 요청해서 가져와 렌더링한다.
 
-## 분리하기  
+### 분리하기  
 근데 지금 ArticlePage 한 함수 안에 라우팅도 있고, 데이터 페칭도 있고, 처리도 있고, 렌더링도 하고 책임이 너무 몰려있다는 생각이 들었다.
 
 Hook을 분리해야 될까 라는 생각이 들었는데,  
@@ -99,7 +96,7 @@ Hook을 분리해야 될까 라는 생각이 들었는데,
 ArticleBanner와 ArticleContent, TagList, CommentSection으로 하나하나 나눴었다.
 
 근데 이러다 든 생각이 어차피 ArticleContent와 TagList는 하나의 집합으로 되어있는데  
-<img src="/images/projects/realworld/pages/Pasted image 20250608154418.png" alt="Pasted image 20250608154418" width="400">  
+<img src="/images/projects/realworld/02. 코드 읽기/Pasted image 20250608154418.png" alt="Pasted image 20250608154418" width="400">  
 굳이 이걸 다 하나하나 나눌 필요가 있는가란 생각이 들었다.  
 책임을 너무 세분화한다는 생각이 들었기 때문이다.   
 그래서 ArticleBody로 한 번에 통합시켰다.
@@ -108,7 +105,7 @@ ArticleBanner와 ArticleContent, TagList, CommentSection으로 하나하나 나�
 왜지 라고 생각해보는데 화살표함수를 사용해서 그런 것 같았다.   
 굳이 화살표 함수를 사용할 필요도 없을 뿐더러   
 나는 일반함수를 쓰는게 읽기가 더 좋아서 좋아하기 때문에 일반함수로 고쳐줬다.  
-## 최종 코드  
+### 최종 코드  
 ```tsx  
 import marked from 'marked';  
 import { useRouter } from 'next/router';  
@@ -216,4 +213,8 @@ export default ArticlePage;
 
 ```
 
-어렵다요......
+## editor
+
+## profile
+
+## user

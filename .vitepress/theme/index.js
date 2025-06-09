@@ -21,7 +21,7 @@ export default {
         repoId: "R_kgDOO0CaVw",
         category: "Comment", // default: `General`
         categoryId: "DIC_kwDOO0CaV84CrAo0",
-        mapping: "title", // default: `pathname`
+        mapping: "pathname", // default: `pathname`
         inputPosition: "bottom", // default: `top`
         lang: "ko", // default: `zh-CN`
         // i18n setting (Note: This configuration will override the default language set by lang)

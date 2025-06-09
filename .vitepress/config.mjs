@@ -4,7 +4,7 @@ import { join } from "path";
 import matter from "gray-matter";
 import { getIcon, getExternalLink } from "./icons";
 
-function buildSidebarFromDirectory(dir, basePath = "/blog") {
+function buildSidebarFromDirectory(dir, basePath = "/blog", depth = 0) {
   const items = [];
 
   try {
@@ -25,14 +25,16 @@ function buildSidebarFromDirectory(dir, basePath = "/blog") {
       const folderName = folder.name;
       const externalLink = getExternalLink(folderName);
       const urlPath = `${basePath}/${folder.name}`;
-      const subItems = buildSidebarFromDirectory(folder.path, urlPath);
+      const subItems = buildSidebarFromDirectory(folder.path, urlPath, depth + 1);
 
       if (subItems.length > 0) {
         items.push({
           text: `${getIcon(folderName)} ${folderName}`,
-          collapsed: false,
+          collapsed: basePath.startsWith("/blog/til")
+            ? depth >= 3
+            : (depth === 0 ? false : depth === 1 ? false : true),
           items: subItems,
-          link: externalLink ?? undefined, // 외부 링크 있으면 사용
+          link: externalLink ?? undefined,
         });
       }
     }

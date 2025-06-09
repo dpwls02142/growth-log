@@ -3,11 +3,14 @@ import "./custom.css";
 import giscusTalk from "vitepress-plugin-comment-with-giscus";
 import { useData, useRoute } from "vitepress";
 import { h, toRefs } from "vue";
+import ReadingProgress from './components/ReadingProgress.vue'
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
-    return h(DefaultTheme.Layout);
+    return h(DefaultTheme.Layout, null, {
+      'layout-top': () => h(ReadingProgress)
+    });
   },
   setup() {
     // Get frontmatter and route

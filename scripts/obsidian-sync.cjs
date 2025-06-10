@@ -9,7 +9,7 @@ const OBSIDIAN_VAULT_PATH = process.env.OBSIDIAN_VAULT_PATH;
 const BLOG_PATH = path.join(__dirname, '..', 'blog');
 const PUBLIC_PATH = path.join(__dirname, '..', 'public');
 
-console.log('🚀 옵시디언과 vitepress 블로그를 연동합니다');
+console.log(' 옵시디언과 vitepress 블로그를 연동합니다');
 
 // 경로 확인
 if (!OBSIDIAN_VAULT_PATH || !fs.existsSync(OBSIDIAN_VAULT_PATH)) {

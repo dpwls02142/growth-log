@@ -76,3 +76,5 @@ coverage/
 .env
 
 mise.toml
+
+.yarn

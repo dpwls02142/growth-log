@@ -4,6 +4,7 @@ category: projects-realworld-02. 코드 읽기
 categoryPath: projects\realworld\02. 코드 읽기
 date: '2025-06-11'
 ---
+# features
 ## article  
 ### ArticleAction  
 처음엔 pages/article나 ArticleMeta에서 해당 기능을 함께 처리할까 고민했다.   

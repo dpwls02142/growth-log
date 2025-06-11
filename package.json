@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "dotenv": "^16.5.0",
+    "glob": "^11.0.2",
     "gray-matter": "^4.0.3",
     "vitepress-plugin-comment-with-giscus": "^1.1.15"
   }

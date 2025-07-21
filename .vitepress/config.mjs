@@ -30,12 +30,15 @@ function buildSidebarFromDirectory(dir, basePath = "/blog", depth = 0) {
       if (subItems.length > 0) {
         items.push({
           text: `${getIcon(folderName)} ${folderName}`,
-          collapsed: basePath.startsWith("/blog/til")
-            ? depth >= 3
-            : (depth === 0 ? false : depth === 1 ? false : true),
+          collapsed: folderName === "projects"
+            ? true
+            : basePath.startsWith("/blog/til")
+              ? depth >= 3
+              : (depth === 0 ? false : depth === 1 ? false : true),
           items: subItems,
           link: externalLink ?? undefined,
         });
+
       }
     }
 

@@ -182,3 +182,154 @@ bool deleteElement(IntElement **head, IntElement *deleteMe){
 - 이 때 포인터를 먼저 다음 노드로 넘기면 현재 노드의 포인터를 잃어버려서 메모리 해제를 못할 수가 있다.  
 - 그렇다고 메모리 해제를 먼저하면 다음 노드를 가리킬 수가 없어 순회가 불가능해지기에  
 - 두 개의 포인터를 사용해주면 된다.
+
+## Stack Implementation (w. linked lists)  
+- 스택은 Last In First Out 구조로 가장 마지막에 삽입된 요소가 가장 먼저 제거되는 구조다. 마치 접시를 쌓고 빼는 것과 유사하다.  
+- 보통 삽입 연산은 push, 제거 연산은 pop이라 한다.  
+- 스택은 보통 함수를 호출 할 때 local variable과 return의 address를 관리한다든가, 프로그래밍 언어를 parsh할 때 쓰인다.  
+- 스택을 구현하는 방법은 크게 dynamic array를 사용하는 방법과 linked lists를 사용하는 방법 두 가지로 나뉜다.  
+- 동적 배열로 구현했을 땐 배열이 꽉 찬 경우 새로운 메모리를 할당하고 기존 데이터를 복사해야하므로 성능상 단점이 있다.  
+- 반면 연결리스트는 요소를 할당할 때 동적으로 하나씩 할당하기에 연결리스트로 스택을 구현하는 편이 좋다.  
+- 스택은 데이터를 저장하는 구조이므로 먼저 각 요소를 나타내는 element struct를 정의해야 한다.  
+```c  
+typedef struct Element{  
+	struct Element *next;  
+	void *data;  
+} Element;  
+```  
+- push와 pop을 구현할 때 인자는 스택 자체를 인자로 받아야한다. 즉 포인터를 가리키는 포인터를 인자로 넘겨야 함수 내부에서 top 포인터가 바꼈을 때 변화가 호출한 쪽에도 반영된다.  
+- push 함수는 데이터를 인자로 받아 새 노드를 생성하고, 이 노드를 기존 스택의 맨 앞에 붙인다. 메모리 할당에 실패할 수도 있으니 이에 대한 오류 처리`if (!elem) return False;` 를 하고 성공 여부는 bool type으로 반환하는 게 좋다.  
+```c  
+bool push(Element **stack, void *data) {  
+	Element *elem = malloc(sizeof(Element));  
+	if (!elem) return False;  
+	elem->data = data; // 데이터 설정  
+	elem->next = *stack; // 새 노드의 next는 기존의 top  
+	*stack = elem;  
+	return true;  
+}
+```  
+- pop 함수는 스택에서 가장 맨 위에 있는 데이터를 제거하고 그 데이터를 반환해야 된다. 그런데 C에서 함수는 하나의 값만 반환할 수 있기에 데이터와 성공 여부를 동시에 반환하려면 한 쪽을 포인터 인자로 넘겨야한다.  
+```c  
+bool pop(Element **stack, void **data) {  
+    Element *elem;  
+    if (!(elem = *stack)) return false;  
+    *data = elem->data;  
+    *stack = elem->next;  
+    free(elem);  
+    return true;  
+}
+```  
+- 스택을 create 하고 delete하는 함수는 다음과 같다. createStack은 스택을 초기화 하는 역할을 하며, 단순히 스택의 포인터를 NULL로 설정한다. deleteStack은 모든 노드를 하나씩 해제한다. pop을 스택이 빌 때까지 반복적으로 호출하는 방법도 있지만, 직접 연결 리스트를 순회하며 메모리를 해제하는 방식이 더 효율적이다.  
+```c  
+bool createStack(Element **stack){  
+	*stack = NULL;  
+	return true;  
+}
+
+bool deleteStack(Element **stack){  
+	Element *next;  
+	while (*stack){  
+		next = (*stack)->next;  
+		free(*stack);  
+		*stack = next;  
+	}  
+	return true;  
+}
+```
+
+## Maintain Linked List Tail Pointer  
+- linked list에서 head와 tail의 포인터를 항상 정확하게 유지하면서 linked list 요소를 delete하거나 insert하기  
+### delete  
+```c  
+bool delete( Element *elem ){  
+    // 1. 삭제할 요소(elem)가 유효한지 확인  
+    /* 만약 elem이 NULL이라면 아무것도 가리킬게 없다는 상태(삭제 할 게 없음)니까   
+     * false 반환  
+     */  
+    if(!elem) return false;
+
+    // 2. 삭제할 요소가 리스트의 맨 앞인 경우  
+    if( elem == head ){  
+        // 1. 먼저 head를 삭제할 요소의 다음 요소로 옮긴다  
+        // 예를 들어 A -> B -> C 에서 A를 지우면 head는 B를 가리키게 된다  
+        head = elem->next;  
+        // 2. 그 후 이제 A는 필요 없으니 메모리에서 해제한다  
+        free(elem);  
+        /*  
+         * 리스트에 요소가 하나만 있는데 그 요소를 삭제한 경우  
+         * (예: A만 있었는데 A를 삭제하면 리스트가 아예 비어버릴거임)  
+         * 즉 head가 NULL일 땐 리스트가 비어있다는 뜻이므로 tail도 NULL로 만든다  
+         */  
+        if(!head) tail = NULL;  
+        return true;  
+    }
+
+    // 3. 삭제할 요소가 리스트의 중간 또는 맨 뒤인 경우  
+    Element *curPos = head;  
+    while( curPos ){ // curPos가 NULL이 아닐 때까지 (리스트 끝까지) 반복  
+        // curPos의 다음 요소가 삭제하려는 elem인지 확인  
+        if( curPos->next == elem ){  
+            curPos->next = elem->next;  
+            free(elem);  
+            /*  
+             * 삭제한 요소가 리스트의 맨 뒤인 경우  
+             * (예: A -> B -> C 에서 C를 삭제하면 B가 새로운 맨 뒤가 됨)  
+             * 만약 방금 삭제한 요소가 마지막이었다면  
+             * curPos가 새로운 tail이 돼야한다.  
+             */  
+            if( curPos->next == NULL ) tail = curPos;  
+            return true;  
+        }  
+        curPos = curPos->next;  
+    }  
+    // 리스트 전체를 다 뒤졌는데도 삭제하려는 요소를 찾지 못했다면 해당 값이 애초당시 리스트에 없다는거니 false 반환  
+    return false;  
+}
+```  
+### insert  
+```c  
+bool insertAfter( Element *elem, int data ){  
+    Element *newElem = malloc( sizeof(Element) );  
+    if( !newElem ) return false;  
+    newElem->data = data;
+
+    // 리스트의 맨 앞에 elem 삽입하는 경우  
+    if( !elem ){  
+        // 새 요소의 다음을 현재 head로 설정  
+        newElem->next = head;  
+        head = newElem;  
+        /*  
+         * 빈 리스트에 첫 요소를 삽입하는 경우엔  
+         * tail도 새 요소를 가리키게 만든다  
+         */  
+        if( !tail ) tail = newElem;  
+        return true;  
+    }
+
+    // elem이 NULL이 아니고 특정 요소 뒤에 삽입하는 경우  
+    Element *curPos = head;  
+    while( curPos ){  
+        if( curPos == elem ){  
+            /*   
+            * 예를 들어 A -> B -> C 에서 B 뒤에 X를 넣으려면  
+            * 새 요소(X)의 다음을 B의 다음(C)으로 연결하고,  
+            * B의 다음을 새 요소(X)로 연결  
+            */   
+            newElem->next = curPos->next; // X -> C  
+            curPos->next = newElem;       // B -> X
+
+            /*  
+             * 리스트의 맨 뒤에 삽입하는 경우  
+             * 새 요소가 새로운 tail이 되어야 한다  
+             */  
+            if( !(newElem->next) ) tail = newElem;  
+            return true;  
+        }  
+        curPos = curPos->next;  
+    }  
+    free( newElem );  
+    return false;  
+}
+```
+

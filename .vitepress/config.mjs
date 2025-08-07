@@ -33,7 +33,7 @@ function buildSidebarFromDirectory(dir, basePath = "/blog", depth = 0) {
           collapsed: folderName === "projects"
             ? true
             : basePath.startsWith("/blog/til")
-              ? depth >= 3
+              ? depth >= 2
               : (depth === 0 ? false : depth === 1 ? false : true),
           items: subItems,
           link: externalLink ?? undefined,

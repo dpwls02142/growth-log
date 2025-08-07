@@ -1,6 +1,7 @@
 ---
 layout: doc
 title: 소개글
+comment: false
 ---
 
 # 소개글
